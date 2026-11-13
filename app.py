@@ -38,7 +38,7 @@ def index():
         end = dt.datetime(2026, 11, 1)
         
         # Download stock data
-        session = curl_requests.Session(impersonate="firefox")
+        session = curl_requests.Session(impersonate="chrome")
         
         df = yf.download(
             stock,
@@ -47,6 +47,7 @@ def index():
             session=session,
             progress=False,
             auto_adjust=True
+            
         )
         
         if df is None or df.empty:
