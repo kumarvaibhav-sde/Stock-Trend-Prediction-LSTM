@@ -10,7 +10,7 @@ import yfinance as yf
 from sklearn.preprocessing import MinMaxScaler
 import os
 plt.style.use("fivethirtyeight")
-
+from curl_cffi import requests as curl_requests
 #Accuracy
 from sklearn.metrics import (
     mean_absolute_error,
@@ -38,7 +38,24 @@ def index():
         end = dt.datetime(2026, 11, 1)
         
         # Download stock data
-        df = yf.download(stock, start=start, end=end)
+        session = curl_requests.Session(impersonate="firefox")
+        
+        df = yf.download(
+            stock,
+            start=start,
+            end=end,
+            session=session,
+            progress=False,
+            auto_adjust=True
+        )
+        
+        if df is None or df.empty:
+            return "Unable to fetch stock data. Please try again later.", 400
+        
+        if len(df) < 334:
+            return "Insufficient historical stock data.", 400
+
+        ####
         
         # Descriptive Data
         data_desc = df.describe()
@@ -86,7 +103,7 @@ def index():
 
         # Transform test data using the already-fitted scaler
         #input_data = scaler.transform(final_df)
-        input_data = scaler.fit_transform(final_df)
+        input_data = scaler.transform(final_df)
         # Prepare X_test and y_test
         x_test = []
         y_test = []
