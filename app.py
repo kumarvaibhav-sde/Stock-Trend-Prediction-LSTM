@@ -41,11 +41,8 @@ def index():
         date_range = f"{start.strftime('%B %Y')} to {(end - dt.timedelta(days=1)).strftime('%B %Y')}"
 
         
-        # Create an explicit curl_cffi session
-        """print("curl_cffi version:", curl_requests.__version__
-              if hasattr(curl_requests, "__version__") else "Loaded")
-        
-        session = curl_requests.Session(impersonate="chrome150")
+        # Create curl_cffi session
+        session = curl_requests.Session(impersonate="chrome142")
         
         try:
             df = yf.download(
@@ -62,39 +59,10 @@ def index():
             session.close()
         
         if df is None or df.empty:
-            return "Unable to fetch stock data from Yahoo Finance. Please try again later.", 400
+            return "Unable to fetch stock data. Please try again later.", 400
         
         if len(df) < 334:
-            return "Insufficient historical stock data.", 400"""
-
-
-
-        
-        import curl_cffi
-        from curl_cffi.requests import impersonate
-        
-        print("curl_cffi version:", curl_cffi.__version__)
-        print("curl_cffi location:", curl_cffi.__file__)
-        
-        print("Available Chrome profiles:")
-        print([
-            name for name in impersonate.REAL_TARGET_MAP
-            if name.startswith("chrome")
-        ])
-        
-        for profile in ["chrome", "chrome150", "chrome146", "chrome136"]:
-            try:
-                test_session = curl_requests.Session(impersonate=profile)
-                response = test_session.get(
-                    "https://query1.finance.yahoo.com/v8/finance/chart/AAPL",
-                    params={"range": "5d", "interval": "1d"},
-                    timeout=20
-                )
-                print(profile, "SUCCESS:", response.status_code)
-                test_session.close()
-            except Exception as e:
-                print(profile, "FAILED:", repr(e))
-
+            return "Insufficient historical stock data.", 400
         
         # Descriptive Data
         data_desc = df.describe()
