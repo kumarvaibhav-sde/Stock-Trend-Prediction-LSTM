@@ -39,7 +39,7 @@ def index():
         date_range = f"{start.strftime('%B %Y')} to {(end - dt.timedelta(days=1)).strftime('%B %Y')}"
         
         # Download stock data
-        session = curl_requests.Session(impersonate="chrome136")
+        session = curl_requests.Session(impersonate="chrome")
         
         df = yf.download(
             stock,
