@@ -10,6 +10,8 @@ import yfinance as yf
 from sklearn.preprocessing import MinMaxScaler
 import os
 plt.style.use("fivethirtyeight")
+import curl_cffi
+from importlib.metadata import version
 from curl_cffi import requests as curl_requests
 from sklearn.metrics import (
     mean_absolute_error,
@@ -40,7 +42,7 @@ def index():
 
         
         # Create an explicit curl_cffi session
-        print("curl_cffi version:", curl_requests.__version__
+        """print("curl_cffi version:", curl_requests.__version__
               if hasattr(curl_requests, "__version__") else "Loaded")
         
         session = curl_requests.Session(impersonate="chrome150")
@@ -63,7 +65,52 @@ def index():
             return "Unable to fetch stock data from Yahoo Finance. Please try again later.", 400
         
         if len(df) < 334:
-            return "Insufficient historical stock data.", 400
+            return "Insufficient historical stock data.", 400"""
+
+
+
+        
+        # Verify the actual runtime packages
+        print("curl_cffi installed version:", version("curl_cffi"))
+        print("yfinance installed version:", version("yfinance"))
+        
+        # Create and test the same session used by yfinance
+        session = curl_requests.Session(impersonate="chrome150")
+        
+        try:
+            print("Session type:", type(session))
+            print("Testing direct Yahoo Finance connection...")
+        
+            test_response = session.get(
+                "https://query1.finance.yahoo.com/v8/finance/chart/AAPL",
+                params={"range": "5d", "interval": "1d"},
+                timeout=30
+            )
+        
+            print("Direct Yahoo HTTP status:", test_response.status_code)
+            print("Direct Yahoo response:", test_response.text[:300])
+        
+            print("Testing yfinance download...")
+        
+            df = yf.download(
+                stock,
+                start=start,
+                end=end,
+                session=session,
+                progress=False,
+                auto_adjust=True,
+                threads=False,
+                timeout=30
+            )
+        
+            print("Downloaded rows:", 0 if df is None else len(df))
+        
+        finally:
+            session.close()
+        
+        if df is None or df.empty:
+            return "Unable to fetch stock data. Check Render logs.", 400
+
 
         
         # Descriptive Data
