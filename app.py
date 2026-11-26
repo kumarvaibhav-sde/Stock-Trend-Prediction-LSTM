@@ -70,47 +70,30 @@ def index():
 
 
         
-        # Verify the actual runtime packages
-        print("curl_cffi installed version:", version("curl_cffi"))
-        print("yfinance installed version:", version("yfinance"))
+        import curl_cffi
+        from curl_cffi.requests import impersonate
         
-        # Create and test the same session used by yfinance
-        session = curl_requests.Session(impersonate="chrome150")
+        print("curl_cffi version:", curl_cffi.__version__)
+        print("curl_cffi location:", curl_cffi.__file__)
         
-        try:
-            print("Session type:", type(session))
-            print("Testing direct Yahoo Finance connection...")
+        print("Available Chrome profiles:")
+        print([
+            name for name in impersonate.REAL_TARGET_MAP
+            if name.startswith("chrome")
+        ])
         
-            test_response = session.get(
-                "https://query1.finance.yahoo.com/v8/finance/chart/AAPL",
-                params={"range": "5d", "interval": "1d"},
-                timeout=30
-            )
-        
-            print("Direct Yahoo HTTP status:", test_response.status_code)
-            print("Direct Yahoo response:", test_response.text[:300])
-        
-            print("Testing yfinance download...")
-        
-            df = yf.download(
-                stock,
-                start=start,
-                end=end,
-                session=session,
-                progress=False,
-                auto_adjust=True,
-                threads=False,
-                timeout=30
-            )
-        
-            print("Downloaded rows:", 0 if df is None else len(df))
-        
-        finally:
-            session.close()
-        
-        if df is None or df.empty:
-            return "Unable to fetch stock data. Check Render logs.", 400
-
+        for profile in ["chrome", "chrome150", "chrome146", "chrome136"]:
+            try:
+                test_session = curl_requests.Session(impersonate=profile)
+                response = test_session.get(
+                    "https://query1.finance.yahoo.com/v8/finance/chart/AAPL",
+                    params={"range": "5d", "interval": "1d"},
+                    timeout=20
+                )
+                print(profile, "SUCCESS:", response.status_code)
+                test_session.close()
+            except Exception as e:
+                print(profile, "FAILED:", repr(e))
 
         
         # Descriptive Data
