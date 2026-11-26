@@ -10,7 +10,6 @@ import yfinance as yf
 from sklearn.preprocessing import MinMaxScaler
 import os
 plt.style.use("fivethirtyeight")
-import curl_cffi
 from importlib.metadata import version
 from sklearn.metrics import (
     mean_absolute_error,
