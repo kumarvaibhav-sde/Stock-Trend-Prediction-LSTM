@@ -12,7 +12,6 @@ import os
 plt.style.use("fivethirtyeight")
 import curl_cffi
 from importlib.metadata import version
-from curl_cffi import requests as curl_requests
 from sklearn.metrics import (
     mean_absolute_error,
     mean_squared_error,
@@ -40,32 +39,36 @@ def index():
         # Format dates for UI
         date_range = f"{start.strftime('%B %Y')} to {(end - dt.timedelta(days=1)).strftime('%B %Y')}"
 
-        
-        # Create curl_cffi session
-        session = curl_requests.Session(impersonate="chrome142")
+               
+        # Fetch stock data from Yahoo Finance
+        print(f"Starting stock download: {stock}", flush=True)
         
         try:
             df = yf.download(
                 stock,
                 start=start,
                 end=end,
-                session=session,
                 progress=False,
                 auto_adjust=True,
                 threads=False,
-                timeout=30
+                timeout=15
             )
-        finally:
-            session.close()
+        
+            print("Stock download completed.", flush=True)
+        
+        except Exception as e:
+            print(f"Yahoo Finance error: {repr(e)}", flush=True)
+            return "Unable to fetch stock data. Please try again later.", 503
         
         if df is None or df.empty:
-            return "Unable to fetch stock data. Please try again later.", 400
+            return "No stock data received. Please check the ticker symbol.", 400
         
         if len(df) < 334:
             return "Insufficient historical stock data.", 400
         
         # Descriptive Data
         data_desc = df.describe()
+
         
         # Exponential Moving Averages
         ema20 = df.Close.ewm(span=20, adjust=False).mean()
