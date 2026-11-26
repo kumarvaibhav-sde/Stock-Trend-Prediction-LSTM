@@ -22,7 +22,7 @@ from sklearn.metrics import (
 app = Flask(__name__)
 
 # Load the model (make sure your model is in the correct path)
-model = load_model('stock_dl_model.h5')
+model = load_model('stock_dl_model.h5', compile=False)
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -37,22 +37,30 @@ def index():
         end = dt.datetime.now().date() + dt.timedelta(days=1)
         # Format dates for UI
         date_range = f"{start.strftime('%B %Y')} to {(end - dt.timedelta(days=1)).strftime('%B %Y')}"
+
         
-        # Download stock data
-        session = curl_requests.Session(impersonate="chrome")
+        # Create an explicit curl_cffi session
+        print("curl_cffi version:", curl_requests.__version__
+              if hasattr(curl_requests, "__version__") else "Loaded")
         
-        df = yf.download(
-            stock,
-            start=start,
-            end=end,
-            session=session,
-            progress=False,
-            auto_adjust=True
-            
-        )
+        session = curl_requests.Session(impersonate="chrome150")
+        
+        try:
+            df = yf.download(
+                stock,
+                start=start,
+                end=end,
+                session=session,
+                progress=False,
+                auto_adjust=True,
+                threads=False,
+                timeout=30
+            )
+        finally:
+            session.close()
         
         if df is None or df.empty:
-            return "Unable to fetch stock data. Please try again later.", 400
+            return "Unable to fetch stock data from Yahoo Finance. Please try again later.", 400
         
         if len(df) < 334:
             return "Insufficient historical stock data.", 400
